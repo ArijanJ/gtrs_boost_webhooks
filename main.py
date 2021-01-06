@@ -34,16 +34,21 @@ def formatTime(lastTime):
     return time.strftime('%H:%M:%S', time.localtime(lastTime))
 
 def sendWebhook(name, lastTime, stat):
-    print("Sending webhook with name " + name + " at time " + formatTime(lastTime) + " with status " + stat)
 
     embed = {}
-    embed["title"] = config["title"]
-    embed["description"] = config["content"].format(name = name, localtime = formatTime(lastTime), status = stat) 
-
+    
     if stat == "ok":
+        emoteStat = ":white_check_mark:"
         embed["color"] = 3066993
     else:
+        emoteStat = ":x:"
         embed["color"] = 15158332
+
+    print("Sending webhook with name " + name + " at time " + formatTime(lastTime) + " with status " + stat)
+
+    embed["title"] = config["title"] + ' ' + emoteStat
+    embed["description"] = config["content"].format(name = name, localtime = formatTime(lastTime), status = stat) 
+
 
     webhook["embeds"].append(embed)
 
@@ -64,6 +69,9 @@ while True:
     # Get JSON
     jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + config["ip_address"])
     dumpedJson = jsonApi.json() 
+
+    if dumpedJson['apiError']:
+        raise Exception("Server not found!")
 
     lastBoost = dumpedJson['boosts'][0]['boost']
 
