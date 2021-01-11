@@ -24,6 +24,7 @@ def loadConfig():
         lines = file.readlines()
         if len(lines) != 0:
             lastBoostTime = int(lines[0])
+        print("lastBoostTime = " + lines[0])
         file.close()
 
 
@@ -44,13 +45,12 @@ def sendWebhook(name, lastTime, stat):
         emoteStat = ":x:"
         embed["color"] = 15158332
 
-    print("Sending webhook with name " + name + " at time " + formatTime(lastTime) + " with status " + stat)
-
     embed["title"] = config["title"] + ' ' + emoteStat
     embed["description"] = config["content"].format(name = name, localtime = formatTime(lastTime), status = stat) 
 
-
     webhook["embeds"].append(embed)
+
+    print("Sending webhook with name " + name + " at time " + formatTime(lastTime) + " with status " + stat)
 
     result = requests.post(config["token"], data = json.dumps(webhook), headers = {"Content-Type": "application/json"})
 
@@ -58,6 +58,7 @@ def sendWebhook(name, lastTime, stat):
         result.raise_for_status()
     except requests.exceptions.HTTPError as err:
         print(err)
+        return
     else:
         print("Webhook sent successfully")
 
@@ -65,6 +66,13 @@ loadConfig()
 print("Running for " + config["ip_address"])
 
 while True:
+
+    with open('last.ini', 'r') as file:
+        lines = file.readlines()
+        if len(lines) != 0:
+            lastBoostTime = int(lines[0])
+        print("lastBoostTime = " + lines[0])
+        file.close()
 
     # Get JSON
     jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + config["ip_address"])
@@ -77,6 +85,8 @@ while True:
 
     actualLastBoostTime = int(lastBoost['time'])
 
+    print(f'lastBoost = {lastBoost} | actualLastBoostTime = {str(actualLastBoostTime)}')
+
     # Compare and send webhook
     if lastBoostTime < actualLastBoostTime:
         lastBoostTime = actualLastBoostTime
@@ -87,6 +97,7 @@ while True:
             lines = file.readlines()
 
             file.truncate(0)
+            print(f'Writing {lastBoostTime}')
             file.write(str(lastBoostTime))
 
             file.close()
