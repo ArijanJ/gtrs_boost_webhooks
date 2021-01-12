@@ -4,12 +4,9 @@ import time
 import json
 
 lastBoostTime = 0
-updateInterval = 10 # Seconds to update
+updateInterval = 180 # Seconds to update
 
 dumpedJson = {}
-
-webhook = {}
-webhook["embeds"] = [] 
 
 config = {}
 
@@ -36,6 +33,8 @@ def formatTime(lastTime):
 
 def sendWebhook(name, lastTime, stat):
 
+    webhook = {}
+    webhook["embeds"] = []
     embed = {}
     
     if stat == "ok":
@@ -71,7 +70,6 @@ while True:
         lines = file.readlines()
         if len(lines) != 0:
             lastBoostTime = int(lines[0])
-        print("lastBoostTime = " + lines[0])
         file.close()
 
     # Get JSON
@@ -84,8 +82,6 @@ while True:
     lastBoost = dumpedJson['boosts'][0]['boost']
 
     actualLastBoostTime = int(lastBoost['time'])
-
-    print(f'lastBoost = {lastBoost} | actualLastBoostTime = {str(actualLastBoostTime)}')
 
     # Compare and send webhook
     if lastBoostTime < actualLastBoostTime:
