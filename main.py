@@ -84,7 +84,7 @@ while True:
     actualLastBoostTime = int(lastBoost['time'])
 
     # Compare and send webhook
-    if lastBoostTime < actualLastBoostTime and lastBoost['status'] != pending:
+    if lastBoostTime < actualLastBoostTime and lastBoost['status'] != "pending":
         lastBoostTime = actualLastBoostTime
         print("Got new boost at " + '[' + formatTime(lastBoostTime) + ']')
         sendWebhook(lastBoost['name'], lastBoostTime, lastBoost['status'])
