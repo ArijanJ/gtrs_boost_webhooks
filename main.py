@@ -29,7 +29,7 @@ def loadConfig():
     config["content"] = cfg.get('text', 'content')
 
 def formatTime(lastTime):
-    return time.strftime('%H:%M:%S', time.localtime(lastTime))
+    return time.strftime('%H:%M:%S', time.localtime(lastTime + 3600))
 
 def sendWebhook(name, lastTime, stat):
 
@@ -84,7 +84,7 @@ while True:
     actualLastBoostTime = int(lastBoost['time'])
 
     # Compare and send webhook
-    if lastBoostTime < actualLastBoostTime:
+    if lastBoostTime < actualLastBoostTime and lastBoost['status'] != pending:
         lastBoostTime = actualLastBoostTime
         print("Got new boost at " + '[' + formatTime(lastBoostTime) + ']')
         sendWebhook(lastBoost['name'], lastBoostTime, lastBoost['status'])
