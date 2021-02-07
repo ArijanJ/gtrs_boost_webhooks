@@ -4,7 +4,8 @@ Small python program to notify a discord channel when a server boost is detected
 
 All configuration is done in config.json:
 
-```{
+```
+{
 
     "servers": {
 
@@ -30,4 +31,5 @@ All configuration is done in config.json:
 
     }
 
-}```
+}
+```
