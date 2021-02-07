@@ -1,0 +1,13 @@
+{
+    "servers": {
+        "server_name": {
+            "ip": "ip",
+            "webhook": "webhookurl",
+            "lastBoost": "0"
+        }
+    },
+    "translation": {
+        "title": "Boost found!",
+        "content": "{name} just boosted the server at {localtime} | status: {status}"
+    }
+}
