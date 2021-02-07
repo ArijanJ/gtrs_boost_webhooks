@@ -1,37 +1,22 @@
-from configparser import ConfigParser
 import requests
 import time
 import json
 
-lastBoostTime = 0
-updateInterval = 180 # Seconds to update
+updateInterval = 120 # Seconds to update
 
+jsonFile = {}
 dumpedJson = {}
 
-config = {}
-
-def loadConfig():
-    global lastBoostTime
-    cfg = ConfigParser()
-    cfg.read('config.ini')
-
-    config["token"] = cfg.get('configuration', 'token')
-    config["ip_address"] = cfg.get('configuration', 'ip_address')
-    with open('last.ini', 'r') as file:
-        lines = file.readlines()
-        if len(lines) != 0:
-            lastBoostTime = int(lines[0])
-        print("lastBoostTime = " + lines[0])
+def loadJson():
+    global jsonFile
+    with open('config.json', 'r') as file:
+        jsonFile = json.load(file)
         file.close()
-
-
-    config["title"] = cfg.get('text', 'title')
-    config["content"] = cfg.get('text', 'content')
 
 def formatTime(lastTime):
     return time.strftime('%H:%M:%S', time.localtime(lastTime + 3600))
 
-def sendWebhook(name, lastTime, stat):
+def sendWebhook(server, name, lastTime, stat):
 
     webhook = {}
     webhook["embeds"] = []
@@ -44,14 +29,14 @@ def sendWebhook(name, lastTime, stat):
         emoteStat = ":x:"
         embed["color"] = 15158332
 
-    embed["title"] = config["title"] + ' ' + emoteStat
-    embed["description"] = config["content"].format(name = name, localtime = formatTime(lastTime), status = stat) 
+    embed["title"] = jsonFile['translation']['title'] + ' ' + emoteStat
+    embed["description"] = jsonFile['translation']['content'].format(name = name, localtime = formatTime(lastTime), status = stat) 
 
     webhook["embeds"].append(embed)
 
     print("Sending webhook with name " + name + " at time " + formatTime(lastTime) + " with status " + stat)
 
-    result = requests.post(config["token"], data = json.dumps(webhook), headers = {"Content-Type": "application/json"})
+    result = requests.post(jsonFile['servers'][server]['webhook'], data = json.dumps(webhook), headers = {"Content-Type": "application/json"})
 
     try:
         result.raise_for_status()
@@ -61,41 +46,39 @@ def sendWebhook(name, lastTime, stat):
     else:
         print("Webhook sent successfully")
 
-loadConfig()
-print("Running for " + config["ip_address"])
+loadJson()
+print("Running for:")
+for server in jsonFile['servers']:
+    print(server)
 
 while True:
 
-    with open('last.ini', 'r') as file:
-        lines = file.readlines()
-        if len(lines) != 0:
-            lastBoostTime = int(lines[0])
-        file.close()
-
     # Get JSON
-    jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + config["ip_address"])
-    dumpedJson = jsonApi.json() 
+    #jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + config["ip_address"])
+    for server in jsonFile['servers']:
+        jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + jsonFile['servers'][server]['ip'])
+        dumpedJson = jsonApi.json() 
 
-    if dumpedJson['apiError']:
-        raise Exception("Server not found!")
+        if dumpedJson['apiError']:
+            raise Exception("Server not found!")
 
-    lastBoost = dumpedJson['boosts'][0]['boost']
+        lastBoost = dumpedJson['boosts'][0]['boost']
 
-    actualLastBoostTime = int(lastBoost['time'])
+        actualLastBoostTime = int(lastBoost['time'])
 
-    # Compare and send webhook
-    if lastBoostTime < actualLastBoostTime and lastBoost['status'] != "pending":
-        lastBoostTime = actualLastBoostTime
-        print("Got new boost at " + '[' + formatTime(lastBoostTime) + ']')
-        sendWebhook(lastBoost['name'], lastBoostTime, lastBoost['status'])
+        server_lastBoost = jsonFile['servers'][server]['lastBoost']
 
-        with open('last.ini', 'w+') as file:
-            lines = file.readlines()
+        # Compare and send webhook
+        if int(server_lastBoost) < actualLastBoostTime and lastBoost['status'] != "pending":
+            server_lastBoost = actualLastBoostTime
+            print("Got new boost at " + '[' + formatTime(server_lastBoost) + '] on server ' + server)
+            sendWebhook(server, lastBoost['name'], server_lastBoost, lastBoost['status'])
 
-            file.truncate(0)
-            print(f'Writing {lastBoostTime}')
-            file.write(str(lastBoostTime))
+            with open('config.json', 'w+') as file:
+                print("Writing " + lastBoost['time'])
+                jsonFile['servers'][server]['lastBoost'] = lastBoost['time']
+                json.dump(jsonFile, file, indent=4)
 
-            file.close()
+                file.close()
 
-    time.sleep(updateInterval)
+        time.sleep(updateInterval / len(jsonFile['servers']))
