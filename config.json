@@ -1,8 +1,11 @@
 {
     "servers": {
         "server_name": {
-            "ip": "ip",
-            "webhook": "webhookurl",
+            "ip": "server_ip",
+            "webhooks": [
+                "example1",
+                "example2"
+            ],
             "lastBoost": "0"
         }
     },
