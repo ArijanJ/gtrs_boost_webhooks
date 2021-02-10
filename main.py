@@ -34,17 +34,18 @@ def sendWebhook(server, name, lastTime, stat):
 
     webhook["embeds"].append(embed)
 
-    print("Sending webhook with name " + name + " at time " + formatTime(lastTime) + " with status " + stat)
+    print("Sending webhook with name " + name + " at time " + formatTime(lastTime) + " with status " + stat + " in " + str(len(jsonFile['servers'][server]['webhooks'])) + " servers.")
 
-    result = requests.post(jsonFile['servers'][server]['webhook'], data = json.dumps(webhook), headers = {"Content-Type": "application/json"})
+    for url in jsonFile['servers'][server]['webhooks']:
 
-    try:
-        result.raise_for_status()
-    except requests.exceptions.HTTPError as err:
-        print(err)
-        return
-    else:
-        print("Webhook sent successfully")
+        result = requests.post(url, data = json.dumps(webhook), headers = {"Content-Type": "application/json"})
+
+        try:
+            result.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            print(err)
+        else:
+            print("Webhook sent successfully")
 
 loadJson()
 print("Running for:")
@@ -54,7 +55,6 @@ for server in jsonFile['servers']:
 while True:
 
     # Get JSON
-    #jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + config["ip_address"])
     for server in jsonFile['servers']:
         jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + jsonFile['servers'][server]['ip'])
         dumpedJson = jsonApi.json() 
@@ -72,6 +72,7 @@ while True:
         if int(server_lastBoost) < actualLastBoostTime and lastBoost['status'] != "pending":
             server_lastBoost = actualLastBoostTime
             print("Got new boost at " + '[' + formatTime(server_lastBoost) + '] on server ' + server)
+
             sendWebhook(server, lastBoost['name'], server_lastBoost, lastBoost['status'])
 
             with open('config.json', 'w+') as file:
