@@ -62,7 +62,10 @@ while True:
         if dumpedJson['apiError']:
             raise Exception("Server not found!")
 
-        lastBoost = dumpedJson['boosts'][0]['boost']
+        try:
+            lastBoost = dumpedJson['boosts'][0]['boost']
+        except:
+            continue
 
         actualLastBoostTime = int(lastBoost['time'])
 
