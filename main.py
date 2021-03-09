@@ -14,7 +14,7 @@ def loadJson():
         file.close()
 
 def formatTime(lastTime):
-    return time.strftime('%H:%M:%S', time.localtime(lastTime + 3600))
+    return time.strftime('%H:%M:%S', time.localtime(lastTime))
 
 def sendWebhook(server, name, lastTime, stat):
 
