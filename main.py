@@ -56,7 +56,13 @@ while True:
 
     # Get JSON
     for server in jsonFile['servers']:
-        jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + jsonFile['servers'][server]['ip'])
+
+        try:
+            jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + jsonFile['servers'][server]['ip'])
+        except TimeoutError as err:
+            print("Timed out: " + err)
+            continue;
+
         dumpedJson = jsonApi.json() 
 
         if dumpedJson['apiError']:
