@@ -59,14 +59,15 @@ while True:
 
         try:
             jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + jsonFile['servers'][server]['ip'])
-        except TimeoutError as err:
-            print("Timed out: " + err)
+        except TimeoutError, ConnectionError as err:
+            print("Request error:" + err)
             continue;
 
         dumpedJson = jsonApi.json() 
 
         if dumpedJson['apiError']:
-            raise Exception("Server not found!")
+            print("apiError occured.")
+            continue;
 
         try:
             lastBoost = dumpedJson['boosts'][0]['boost']
