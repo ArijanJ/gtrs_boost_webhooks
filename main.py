@@ -59,7 +59,7 @@ while True:
 
         try:
             jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + jsonFile['servers'][server]['ip'])
-        except TimeoutError, ConnectionError as err:
+        except (TimeoutError, ConnectionError) as err:
             print("Request error:" + err)
             continue;
 
