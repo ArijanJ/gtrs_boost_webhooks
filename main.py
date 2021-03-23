@@ -1,8 +1,9 @@
+import traceback
 import requests
 import time
 import json
 
-updateInterval = 120 # Seconds to update
+updateInterval = 20 # Seconds to update
 
 jsonFile = {}
 dumpedJson = {}
@@ -42,8 +43,8 @@ def sendWebhook(server, name, lastTime, stat):
 
         try:
             result.raise_for_status()
-        except requests.exceptions.HTTPError as err:
-            print(err)
+        except requests.exceptions.RequestException as err:
+            traceback.print_exc()
         else:
             print("Webhook sent successfully")
 
@@ -57,13 +58,17 @@ while True:
     # Get JSON
     for server in jsonFile['servers']:
 
+        time.sleep(updateInterval / len(jsonFile['servers']))
+
+        dumpedJson = ''
+
         try:
             jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + jsonFile['servers'][server]['ip'])
-        except (TimeoutError, ConnectionError) as err:
-            print("Request error:" + err)
+            dumpedJson = jsonApi.json() 
+        except requests.exceptions.RequestException:
+            print("Request error:")
+            traceback.print_exc()
             continue;
-
-        dumpedJson = jsonApi.json() 
 
         if dumpedJson['apiError']:
             print("apiError occured.")
@@ -91,5 +96,3 @@ while True:
                 json.dump(jsonFile, file, indent=4)
 
                 file.close()
-
-        time.sleep(updateInterval / len(jsonFile['servers']))
