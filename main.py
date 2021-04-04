@@ -65,7 +65,7 @@ while True:
         try:
             jsonApi = requests.get("http://api.gametracker.rs/demo/json/server_boosts/" + jsonFile['servers'][server]['ip'])
             dumpedJson = jsonApi.json() 
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException, requests.exceptions.ConnectionError):
             print("Request error:")
             traceback.print_exc()
             continue;
